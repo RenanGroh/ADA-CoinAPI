@@ -35,3 +35,4 @@ public class CurrencyComparisonDTOTest {
         assertEquals(dto, deserializedDto);
     }
 }
+
