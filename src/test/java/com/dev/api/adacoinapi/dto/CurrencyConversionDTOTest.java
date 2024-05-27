@@ -11,13 +11,17 @@ public class CurrencyConversionDTOTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+
     @Test
-    public void testSerialization() throws Exception {
+    void testSerialization() throws Exception {
         CurrencyConversionDTO dto = new CurrencyConversionDTO("USD", "EUR", new BigDecimal("100.00"), new BigDecimal("85.00"));
 
         String json = objectMapper.writeValueAsString(dto);
         CurrencyConversionDTO deserializedDto = objectMapper.readValue(json, CurrencyConversionDTO.class);
 
-        assertEquals(dto, deserializedDto);
+        assertEquals(dto.getFromCurrency(), deserializedDto.getFromCurrency());
+        assertEquals(dto.getToCurrency(), deserializedDto.getToCurrency());
+        assertEquals(0, dto.getAmount().compareTo(deserializedDto.getAmount()));
+        assertEquals(0, dto.getConvertedAmount().compareTo(deserializedDto.getConvertedAmount()));
     }
 }
