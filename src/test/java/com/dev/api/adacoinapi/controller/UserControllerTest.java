@@ -66,3 +66,36 @@ public class UserControllerTest {
         assertEquals(ResponseEntity.ok(mockUser), response);
     }
 }
+
+@WebMvcTest(UserController.class)
+class UserControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private UserService userService;
+
+    @Test
+    void testCreateUserWithParams() throws Exception {
+        User mockUser = new User(1L, "user", "pass");
+        when(userService.createUser("user", "pass")).thenReturn(mockUser);
+
+        mockMvc.perform(post("/api/users")
+                .param("username", "user")
+                .param("password", "pass"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("user"));
+    }
+
+    @Test
+    void testAddFavoriteCurrency() throws Exception {
+        User mockUser = new User(1L, "user", "pass");
+        when(userService.addFavoriteCurrency(1L, 1L)).thenReturn(mockUser);
+
+        mockMvc.perform(post("/api/users/{userId}/favoriteCurrencies/{quoteId}", 1, 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("user"));
+    }
+}
+
