@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserDTOTest {
 
@@ -34,40 +35,40 @@ class UserDTOTest {
         User user = new User();
         user.setId(1L);
         user.setUsername("testuser");
-        user.setPassword("password");
+        user.setPassword("password"); // Ensure sensitive data like password is not included in DTO
         user.setFavoriteCurrencies(Arrays.asList(quote1, quote2));
-
-        quote1.setUser(user);
-        quote2.setUser(user);
 
         UserDTO userDTO = new UserDTO(user);
 
         assertEquals(user.getId(), userDTO.getId());
         assertEquals(user.getUsername(), userDTO.getUsername());
+        assertTrue(userDTO.getFavoriteCurrencies().size() == 2);
 
-        List<CurrencyQuoteDTO> favoriteCurrenciesDTO = userDTO.getFavoriteCurrencies();
-        assertEquals(2, favoriteCurrenciesDTO.size());
-
-        CurrencyQuoteDTO quoteDTO1 = favoriteCurrenciesDTO.stream()
-                .filter(dto -> dto.getCurrencyCode().equals(quote1.getCurrencyCode()))
+        userDTO.getFavoriteCurrencies().forEach(dto -> {
+            CurrencyQuote originalQuote = user.getFavoriteCurrencies().stream()
+                .filter(q -> q.getCurrencyCode().equals(dto.getCurrencyCode()))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("QuoteDTO1 not found"));
+                .orElseThrow(() -> new AssertionError("Matching CurrencyQuote not found for DTO"));
 
-        assertEquals(quote1.getCurrencyCode(), quoteDTO1.getCurrencyCode());
-        assertEquals(quote1.getCurrencyName(), quoteDTO1.getCurrencyName());
-        assertEquals(quote1.getBid(), quoteDTO1.getBid());
-        assertEquals(quote1.getAsk(), quoteDTO1.getAsk());
-        assertEquals(quote1.getTimestamp(), quoteDTO1.getTimestamp());
+            assertEquals(originalQuote.getCurrencyCode(), dto.getCurrencyCode());
+            assertEquals(originalQuote.getCurrencyName(), dto.getCurrencyName());
+            assertEquals(0, originalQuote.getBid().compareTo(dto.getBid()));
+            assertEquals(0, originalQuote.getAsk().compareTo(dto.getAsk()));
+            assertEquals(originalQuote.getTimestamp(), dto.getTimestamp());
+        });
+    }
 
-        CurrencyQuoteDTO quoteDTO2 = favoriteCurrenciesDTO.stream()
-                .filter(dto -> dto.getCurrencyCode().equals(quote2.getCurrencyCode()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("QuoteDTO2 not found"));
+    @Test
+    void testUserDTOWithNoCurrencies() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setFavoriteCurrencies(Arrays.asList());
 
-        assertEquals(quote2.getCurrencyCode(), quoteDTO2.getCurrencyCode());
-        assertEquals(quote2.getCurrencyName(), quoteDTO2.getCurrencyName());
-        assertEquals(quote2.getBid(), quoteDTO2.getBid());
-        assertEquals(quote2.getAsk(), quoteDTO2.getAsk());
-        assertEquals(quote2.getTimestamp(), quoteDTO2.getTimestamp());
+        UserDTO userDTO = new UserDTO(user);
+
+        assertEquals(user.getId(), userDTO.getId());
+        assertEquals(user.getUsername(), userDTO.getUsername());
+        assertTrue(userDTO.getFavoriteCurrencies().isEmpty(), "Favorite currencies list should be empty");
     }
 }
